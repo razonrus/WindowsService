@@ -1,30 +1,59 @@
 ﻿using System;
-using System.ComponentModel;
 using System.ServiceProcess;
-using WindowsService.Annotations;
-using WindowsService.ServiceInfrastructure;
-using ServiceInstaller = WindowsService.ServiceInfrastructure.ServiceInstaller;
 
 namespace WindowsService
 {
-    [DesignerCategory(""), UsedImplicitly]
-    public class Program : ServiceRunnerBase
+    public static class Program
     {
-        private static void Main()
+        #region Nested classes to support running as service
+
+        private const string ServiceName = "MyService";
+
+        private class Service : ServiceBase
         {
-
-            var service = new WindowsService { ServiceName = ServiceInstaller.ServiceName };
-
-            if (Environment.UserInteractive)
+            public Service()
             {
-                //Running in console
-                RunAsConsoleApp(service, null);
+                ServiceName = Program.ServiceName;
             }
+
+            protected override void OnStart(string[] args)
+            {
+                Start(args);
+            }
+
+            protected override void OnStop()
+            {
+                Program.Stop();
+            }
+        }
+        #endregion
+
+        static void Main(string[] args)
+        {
+            if (!Environment.UserInteractive)
+                // running as service
+                using (var service = new Service())
+                    ServiceBase.Run(service);
             else
             {
-                //Running as windows service
-                ServiceBase.Run(service);
+                // running as console app
+                Start(args);
+
+                Console.WriteLine("Press any key to stop...");
+                Console.ReadKey(true);
+
+                Stop();
             }
+        }
+
+        private static void Start(string[] args)
+        {
+            // onstart code here
+        }
+
+        private static void Stop()
+        {
+            // onstop code here
         }
     }
 }
